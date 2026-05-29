@@ -1,0 +1,26 @@
+{
+  "name": "hw-factory-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "db:setup": "node src/database/setup.js",
+    "db:seed": "node src/database/seed.js",
+    "db:customers": "node src/database/updateCustomers.js",
+    "db:all": "node src/database/setup.js && node src/database/seed.js",
+    "db:sync-khata": "node src/database/syncKhata.js",
+    "db:migrate-cartons": "node src/database/migrateCartons.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "exceljs": "^4.4.0",
+    "express": "^4.19.2",
+    "express-validator": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.12.0"
+  }
+}

@@ -1,0 +1,25 @@
+HAMID WALI SHOE FACTORY - DATABASE QUICK HELP
+============================================
+
+EASIEST (from project main folder):
+  Double-click: setup-database.bat
+
+OR in PowerShell (backend folder):
+  npm run db:setup
+  npm run db:seed
+
+PGADMIN LOGIN:
+  Host:     localhost
+  Port:     5432
+  Database: hamid_wali_factory
+  Username: hw_factory_admin
+  Password: (see backend\.env file -> DB_PASSWORD)
+
+IF SETUP FAILS:
+  Edit backend\.env
+  Set POSTGRES_ADMIN_PASSWORD = your postgres password from pgAdmin
+
+START WEBSITE:
+  Double-click: start-app.bat
+  Browser: http://localhost:3000
+  Login: admin / admin123
