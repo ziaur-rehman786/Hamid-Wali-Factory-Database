@@ -14,6 +14,7 @@ A complete professional desktop/web-based inventory and billing system for **Ham
 - **Master Data** — Dynamic designs, colors, sizes
 - **Roles** — Admin (full access) & Staff (no profit/loss view)
 - **Dark Mode**, backup/restore, Excel export, responsive UI
+- **English / Pashto (پښتو)** — UI language switcher in header and Settings (RTL layout for Pashto)
 
 ## Tech Stack
 

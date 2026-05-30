@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Plus, Search } from 'lucide-react';
 import { getInvoices } from '../services/api';
@@ -7,6 +8,7 @@ import Pagination from '../components/Pagination';
 import { formatCurrency, formatDate } from '../utils/format';
 
 export default function Invoices() {
+  const { t } = useTranslation();
   const [invoices, setInvoices] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, total: 0, limit: 20 });
   const [loading, setLoading] = useState(true);
@@ -28,16 +30,16 @@ export default function Invoices() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Invoices</h1>
+        <h1 className="text-2xl font-bold">{t('invoices.title')}</h1>
         <Link to="/invoices/new" className="btn-primary flex items-center gap-2">
-          <Plus size={18} /> New Invoice
+          <Plus size={18} /> {t('invoices.newInvoice')}
         </Link>
       </div>
 
       <div className="flex gap-3 flex-wrap">
-        <input className="input-field max-w-xs" placeholder="Customer name" value={filters.customer} onChange={(e) => setFilters({ ...filters, customer: e.target.value })} />
-        <input className="input-field max-w-xs" placeholder="Invoice number" value={filters.invoice_number} onChange={(e) => setFilters({ ...filters, invoice_number: e.target.value })} />
-        <button onClick={() => load()} className="btn-primary flex items-center gap-1"><Search size={16} /> Search</button>
+        <input className="input-field max-w-xs" placeholder={t('invoices.customerName')} value={filters.customer} onChange={(e) => setFilters({ ...filters, customer: e.target.value })} />
+        <input className="input-field max-w-xs" placeholder={t('invoices.invoiceNumber')} value={filters.invoice_number} onChange={(e) => setFilters({ ...filters, invoice_number: e.target.value })} />
+        <button onClick={() => load()} className="btn-primary flex items-center gap-1"><Search size={16} /> {t('common.search')}</button>
       </div>
 
       {loading ? <LoadingSpinner /> : (
@@ -46,13 +48,13 @@ export default function Invoices() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Invoice #</th>
-                  <th>Date</th>
-                  <th>Customer</th>
-                  <th>Total</th>
-                  <th>Paid</th>
-                  <th>Remaining</th>
-                  <th>Actions</th>
+                  <th>{t('invoices.invoiceNum')}</th>
+                  <th>{t('common.date')}</th>
+                  <th>{t('dashboard.customer')}</th>
+                  <th>{t('common.total')}</th>
+                  <th>{t('common.paid')}</th>
+                  <th>{t('common.remaining')}</th>
+                  <th>{t('common.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -67,7 +69,7 @@ export default function Invoices() {
                       {formatCurrency(inv.remaining_amount)}
                     </td>
                     <td>
-                      <Link to={`/invoices/${inv.id}`} className="text-primary-800 dark:text-gold-400 hover:underline text-sm font-medium">View</Link>
+                      <Link to={`/invoices/${inv.id}`} className="text-primary-800 dark:text-gold-400 hover:underline text-sm font-medium">{t('invoices.view')}</Link>
                     </td>
                   </tr>
                 ))}

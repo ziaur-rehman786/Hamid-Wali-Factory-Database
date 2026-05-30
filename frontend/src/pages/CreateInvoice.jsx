@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
   getCustomers, getDesigns, getColors, getSizes, getInventory, createInvoice, createCustomer, getSettings,
 } from '../services/api';
+import { translateApiMessage } from '../utils/translateApi';
 import { formatCurrency } from '../utils/format';
 
 const todayISO = () => new Date().toISOString().split('T')[0];
@@ -14,6 +16,7 @@ const emptyItem = () => ({
 });
 
 export default function CreateInvoice() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [customers, setCustomers] = useState([]);
   const [designs, setDesigns] = useState([]);
@@ -93,20 +96,20 @@ export default function CreateInvoice() {
       setCustomers([...customers, data]);
       setCustomerId(data.id);
       setShowNewCustomer(false);
-      toast.success('Customer created');
+      toast.success(t('createInvoice.customerCreated'));
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed');
+      toast.error(translateApiMessage(err.response?.data?.message, t) || t('common.failed'));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!customerId) return toast.error('Select a customer');
+    if (!customerId) return toast.error(t('createInvoice.selectCustomerToast'));
 
     for (const item of items) {
       const qty = parseInt(item.quantity, 10);
       if (!qty || qty < 1) {
-        return toast.error('Enter pairs quantity (or use cartons to calculate pairs)');
+        return toast.error(t('createInvoice.enterPairsToast'));
       }
     }
 
@@ -128,10 +131,10 @@ export default function CreateInvoice() {
           };
         }),
       });
-      toast.success('Invoice created!');
+      toast.success(t('createInvoice.invoiceCreated'));
       navigate(`/invoices/${data.id}`);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to create invoice');
+      toast.error(translateApiMessage(err.response?.data?.message, t) || t('createInvoice.createFailed'));
     } finally {
       setLoading(false);
     }
@@ -139,16 +142,16 @@ export default function CreateInvoice() {
 
   return (
     <div className="space-y-6 max-w-6xl">
-      <h1 className="text-2xl font-bold">Create New Invoice</h1>
+      <h1 className="text-2xl font-bold">{t('createInvoice.title')}</h1>
       <p className="text-sm text-gray-500">
-        1 carton = {pairsPerCarton} pairs. Leave <strong>Cartons</strong> empty when selling only a few pairs (e.g. 2 pairs).
+        {t('createInvoice.cartonHint', { pairs: pairsPerCarton })}
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="card space-y-4">
-          <h3 className="font-semibold">Customer & Date</h3>
+          <h3 className="font-semibold">{t('createInvoice.customerAndDate')}</h3>
           <div>
-            <label className="block text-sm font-medium mb-1">Invoice Date</label>
+            <label className="block text-sm font-medium mb-1">{t('createInvoice.invoiceDate')}</label>
             <input
               type="date"
               className="input-field max-w-xs"
@@ -159,31 +162,31 @@ export default function CreateInvoice() {
           </div>
           <div className="flex gap-3 flex-wrap">
             <select className="input-field flex-1 min-w-[200px]" value={customerId} onChange={(e) => setCustomerId(e.target.value)} required>
-              <option value="">Select Customer</option>
+              <option value="">{t('createInvoice.selectCustomer')}</option>
               {customers.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name} {c.remaining_balance > 0 ? `(Due: ${formatCurrency(c.remaining_balance)})` : ''}
+                  {c.name} {c.remaining_balance > 0 ? t('createInvoice.dueAmount', { amount: formatCurrency(c.remaining_balance) }) : ''}
                 </option>
               ))}
             </select>
             <button type="button" onClick={() => setShowNewCustomer(!showNewCustomer)} className="btn-secondary">
-              + New Customer
+              {t('createInvoice.newCustomer')}
             </button>
           </div>
           {showNewCustomer && (
             <div className="flex gap-2 flex-wrap p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
-              <input className="input-field flex-1" placeholder="Name" value={newCustomer.name} onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })} />
-              <input className="input-field flex-1" placeholder="Phone" value={newCustomer.phone} onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })} />
-              <button type="button" onClick={handleCreateCustomer} className="btn-primary">Add</button>
+              <input className="input-field flex-1" placeholder={t('common.name')} value={newCustomer.name} onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })} />
+              <input className="input-field flex-1" placeholder={t('common.phone')} value={newCustomer.phone} onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })} />
+              <button type="button" onClick={handleCreateCustomer} className="btn-primary">{t('common.add')}</button>
             </div>
           )}
         </div>
 
         <div className="card">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-semibold">Invoice Items</h3>
+            <h3 className="font-semibold">{t('createInvoice.invoiceItems')}</h3>
             <button type="button" onClick={addItem} className="btn-secondary flex items-center gap-1 text-sm">
-              <Plus size={16} /> Add Item
+              <Plus size={16} /> {t('createInvoice.addItem')}
             </button>
           </div>
 
@@ -193,28 +196,28 @@ export default function CreateInvoice() {
               return (
                 <div key={index} className="grid grid-cols-2 md:grid-cols-7 gap-3 p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg items-end">
                   <div>
-                    <label className="text-xs text-gray-500">Design</label>
+                    <label className="text-xs text-gray-500">{t('common.design')}</label>
                     <select className="input-field" value={item.design_id} onChange={(e) => updateItem(index, 'design_id', e.target.value)} required>
-                      <option value="">Select</option>
+                      <option value="">{t('common.select')}</option>
                       {designs.map((d) => <option key={d.id} value={d.id}>{d.art_number}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs text-gray-500">Color</label>
+                    <label className="text-xs text-gray-500">{t('common.color')}</label>
                     <select className="input-field" value={item.color_id} onChange={(e) => updateItem(index, 'color_id', e.target.value)} required>
-                      <option value="">Select</option>
+                      <option value="">{t('common.select')}</option>
                       {colors.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs text-gray-500">Size</label>
+                    <label className="text-xs text-gray-500">{t('common.size')}</label>
                     <select className="input-field" value={item.size_id} onChange={(e) => updateItem(index, 'size_id', e.target.value)} required>
-                      <option value="">Select</option>
+                      <option value="">{t('common.select')}</option>
                       {sizes.map((s) => <option key={s.id} value={s.id}>{s.size_value}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs text-gray-500">Cartons (optional)</label>
+                    <label className="text-xs text-gray-500">{t('createInvoice.cartonsOptional')}</label>
                     <input
                       type="number"
                       min="0"
@@ -224,12 +227,12 @@ export default function CreateInvoice() {
                       onChange={(e) => updateItem(index, 'cartons', e.target.value)}
                     />
                     {hasCartons && (
-                      <p className="text-[10px] text-primary-600 mt-0.5">= {item.quantity} pairs</p>
+                      <p className="text-[10px] text-primary-600 mt-0.5">{t('createInvoice.pairsCalc', { pairs: item.quantity })}</p>
                     )}
                   </div>
                   <div>
                     <label className="text-xs text-gray-500">
-                      Pairs {item.available ? `(Avail: ${item.available})` : ''}
+                      {t('common.pairs')} {item.available ? t('createInvoice.avail', { qty: item.available }) : ''}
                     </label>
                     <input
                       type="number"
@@ -242,7 +245,7 @@ export default function CreateInvoice() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-gray-500">Sale Price (AFN)</label>
+                    <label className="text-xs text-gray-500">{t('createInvoice.salePriceAfn')}</label>
                     <input type="number" className="input-field" value={item.sale_price} onChange={(e) => updateItem(index, 'sale_price', e.target.value)} required />
                   </div>
                   <div className="flex items-center gap-2">
@@ -262,15 +265,15 @@ export default function CreateInvoice() {
         <div className="card">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="text-sm font-medium">Grand Total</label>
+              <label className="text-sm font-medium">{t('createInvoice.grandTotal')}</label>
               <p className="text-2xl font-bold text-primary-900 dark:text-gold-400">{formatCurrency(grandTotal)}</p>
             </div>
             <div>
-              <label className="text-sm font-medium">Paid Amount</label>
+              <label className="text-sm font-medium">{t('createInvoice.paidAmount')}</label>
               <input type="number" className="input-field mt-1" value={paidAmount} onChange={(e) => setPaidAmount(e.target.value)} min="0" />
             </div>
             <div>
-              <label className="text-sm font-medium">Remaining (Khata)</label>
+              <label className="text-sm font-medium">{t('createInvoice.remainingKhata')}</label>
               <p className={`text-2xl font-bold mt-1 ${remaining > 0 ? 'text-red-600' : 'text-green-600'}`}>
                 {formatCurrency(remaining)}
               </p>
@@ -279,7 +282,7 @@ export default function CreateInvoice() {
         </div>
 
         <button type="submit" disabled={loading} className="btn-primary w-full md:w-auto px-8 py-3">
-          {loading ? 'Creating...' : 'Create Invoice'}
+          {loading ? t('common.creating') : t('createInvoice.createInvoice')}
         </button>
       </form>
     </div>

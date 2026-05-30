@@ -1,6 +1,7 @@
 import ExcelJS from 'exceljs';
 import { query } from '../config/database.js';
 import { formatCurrencyLabel } from '../utils/currency.js';
+import { msg } from '../i18n/messages.js';
 
 export const getDailySales = async (req, res) => {
   try {
@@ -55,7 +56,7 @@ export const getMonthlySales = async (req, res) => {
 
 export const getProfitReport = async (req, res) => {
   if (req.user.role !== 'admin') {
-    return res.status(403).json({ message: 'Admin only' });
+    return res.status(403).json({ message: msg(req, 'adminOnly') });
   }
   try {
     const { date_from, date_to } = req.query;

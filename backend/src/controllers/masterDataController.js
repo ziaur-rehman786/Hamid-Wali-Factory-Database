@@ -1,4 +1,5 @@
 import { query } from '../config/database.js';
+import { msg } from '../i18n/messages.js';
 
 // Designs
 export const getDesigns = async (req, res) => {
@@ -119,7 +120,7 @@ export const updateSettings = async (req, res) => {
         [key, value]
       );
     }
-    res.json({ message: 'Settings updated' });
+    res.json({ message: msg(req, 'settingsSaved') });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

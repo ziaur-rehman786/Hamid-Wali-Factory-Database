@@ -1,4 +1,5 @@
 import { query, getClient } from '../config/database.js';
+import { msg } from '../i18n/messages.js';
 
 const inventorySelect = `
   SELECT i.*, pd.art_number, pd.name as design_name,
@@ -68,7 +69,7 @@ export const getInventory = async (req, res) => {
 export const getInventoryItem = async (req, res) => {
   try {
     const result = await query(`${inventorySelect} WHERE i.id = $1`, [req.params.id]);
-    if (!result.rows.length) return res.status(404).json({ message: 'Not found' });
+    if (!result.rows.length) return res.status(404).json({ message: msg(req, 'notFound') });
     res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -94,7 +95,7 @@ export const createInventory = async (req, res) => {
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    if (err.code === '23505') return res.status(400).json({ message: 'This design/color/size combination already exists' });
+    if (err.code === '23505') return res.status(400).json({ message: msg(req, 'duplicateStock') });
     res.status(500).json({ message: err.message });
   }
 };
@@ -103,7 +104,7 @@ export const updateInventory = async (req, res) => {
   try {
     const { quantity, cost_price, sale_price, low_stock_threshold } = req.body;
     const old = await query('SELECT * FROM inventory WHERE id = $1', [req.params.id]);
-    if (!old.rows.length) return res.status(404).json({ message: 'Not found' });
+    if (!old.rows.length) return res.status(404).json({ message: msg(req, 'notFound') });
 
     const result = await query(
       `UPDATE inventory SET
@@ -134,9 +135,9 @@ export const updateInventory = async (req, res) => {
 export const deleteInventory = async (req, res) => {
   try {
     await query('DELETE FROM inventory WHERE id = $1', [req.params.id]);
-    res.json({ message: 'Deleted successfully' });
+    res.json({ message: msg(req, 'deleted') });
   } catch (err) {
-    if (err.code === '23503') return res.status(400).json({ message: 'Cannot delete - referenced by invoices' });
+    if (err.code === '23503') return res.status(400).json({ message: msg(req, 'cannotDeleteReferenced') });
     res.status(500).json({ message: err.message });
   }
 };
@@ -148,7 +149,7 @@ export const addStock = async (req, res) => {
       `UPDATE inventory SET quantity = quantity + $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
       [quantity, req.params.id]
     );
-    if (!result.rows.length) return res.status(404).json({ message: 'Not found' });
+    if (!result.rows.length) return res.status(404).json({ message: msg(req, 'notFound') });
 
     await query(
       `INSERT INTO stock_movements (inventory_id, movement_type, quantity, reference_type, created_by, notes)

@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Database, Download, RotateCcw } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Database, RotateCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { createBackup, listBackups, restoreBackup, getBackupStatus } from '../services/api';
+import { translateApiMessage } from '../utils/translateApi';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function Backup() {
+  const { t } = useTranslation();
   const [backups, setBackups] = useState([]);
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,22 +28,22 @@ export default function Backup() {
     setCreating(true);
     try {
       const { data } = await createBackup();
-      toast.success(data.message);
+      toast.success(translateApiMessage(data.message, t));
       load();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Backup failed. Install PostgreSQL tools (pg_dump).');
+      toast.error(translateApiMessage(err.response?.data?.message, t) || t('backup.backupFailed'));
     } finally {
       setCreating(false);
     }
   };
 
   const handleRestore = async (filename) => {
-    if (!confirm(`Restore database from ${filename}? This will overwrite current data.`)) return;
+    if (!confirm(t('backup.restoreConfirm', { filename }))) return;
     try {
       await restoreBackup(filename);
-      toast.success('Database restored');
+      toast.success(t('backup.restored'));
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Restore failed');
+      toast.error(translateApiMessage(err.response?.data?.message, t) || t('backup.restoreFailed'));
     }
   };
 
@@ -48,22 +51,22 @@ export default function Backup() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Backup & Restore</h1>
-          <p className="text-gray-500">Manage database backups</p>
+          <h1 className="text-2xl font-bold">{t('backup.title')}</h1>
+          <p className="text-gray-500">{t('backup.subtitle')}</p>
         </div>
         <button onClick={handleCreate} disabled={creating} className="btn-primary flex items-center gap-2">
-          <Database size={18} /> {creating ? 'Creating...' : 'Create Backup'}
+          <Database size={18} /> {creating ? t('backup.creating') : t('backup.createBackup')}
         </button>
       </div>
 
       <div className={`card ${status?.toolsAvailable ? 'bg-green-50 dark:bg-green-900/20 border-green-200' : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200'}`}>
         <p className="text-sm font-medium">
-          {status?.toolsAvailable ? '✓ Backup tools ready' : '⚠ Backup tools not detected'}
+          {status?.toolsAvailable ? t('backup.toolsReady') : t('backup.toolsMissing')}
         </p>
         <p className="text-sm mt-1 text-gray-600 dark:text-gray-400">
           {status?.toolsAvailable
-            ? `Using: ${status.pgBin} — files saved to backend/backups/`
-            : 'Install PostgreSQL or set PG_BIN in backend/.env (e.g. C:\\Program Files\\PostgreSQL\\16\\bin)'}
+            ? t('backup.usingPath', { path: status.pgBin })
+            : t('backup.installPg')}
         </p>
       </div>
 
@@ -71,11 +74,16 @@ export default function Backup() {
         <div className="table-container card p-0">
           <table className="data-table">
             <thead>
-              <tr><th>Filename</th><th>Size</th><th>Created</th><th>Actions</th></tr>
+              <tr>
+                <th>{t('backup.filename')}</th>
+                <th>{t('backup.size')}</th>
+                <th>{t('backup.created')}</th>
+                <th>{t('common.actions')}</th>
+              </tr>
             </thead>
             <tbody>
               {backups.length === 0 ? (
-                <tr><td colSpan={4} className="text-center text-gray-500 py-8">No backups yet</td></tr>
+                <tr><td colSpan={4} className="text-center text-gray-500 py-8">{t('backup.noBackups')}</td></tr>
               ) : (
                 backups.map((b) => (
                   <tr key={b.name}>
@@ -84,7 +92,7 @@ export default function Backup() {
                     <td>{new Date(b.created).toLocaleString()}</td>
                     <td className="flex gap-2">
                       <button onClick={() => handleRestore(b.name)} className="text-amber-600 flex items-center gap-1 text-sm">
-                        <RotateCcw size={14} /> Restore
+                        <RotateCcw size={14} /> {t('backup.restore')}
                       </button>
                     </td>
                   </tr>

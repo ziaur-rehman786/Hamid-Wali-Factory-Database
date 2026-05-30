@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import routes from './routes/index.js';
+import { localeMiddleware } from './middleware/locale.js';
+import { msg } from './i18n/messages.js';
 
 dotenv.config();
 
@@ -12,6 +14,7 @@ const PORT = process.env.PORT || 5000;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 app.use(cors());
+app.use(localeMiddleware);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -25,7 +28,7 @@ const frontendDist = path.join(__dirname, '../../frontend/dist');
 app.use(express.static(frontendDist));
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api')) {
-    return res.status(404).json({ message: 'API route not found' });
+    return res.status(404).json({ message: msg(req, 'apiNotFound') });
   }
   res.sendFile(path.join(frontendDist, 'index.html'), (err) => {
     if (err) res.status(404).send('Frontend not built. Run: cd frontend && npm run build');
@@ -34,7 +37,7 @@ app.get('*', (req, res) => {
 
 app.use((err, req, res, next) => {
   console.error(err);
-  res.status(500).json({ message: 'Internal server error' });
+  res.status(500).json({ message: msg(req, 'internalError') });
 });
 
 app.listen(PORT, () => {

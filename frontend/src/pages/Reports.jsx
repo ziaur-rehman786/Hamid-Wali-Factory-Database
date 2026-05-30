@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Download } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
@@ -9,7 +10,30 @@ import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { formatCurrency, formatDate } from '../utils/format';
 
+const COL_LABELS = {
+  invoice_number: 'invoices.invoiceNum',
+  customer_name: 'dashboard.customer',
+  grand_total: 'common.total',
+  paid_amount: 'common.paid',
+  remaining_amount: 'common.remaining',
+  invoice_date: 'common.date',
+  total_profit: 'dashboard.totalProfit',
+  total_loss: 'dashboard.totalLoss',
+  art_number: 'masterData.artNumber',
+  color: 'common.color',
+  size: 'common.size',
+  quantity: 'common.quantity',
+  cost_price: 'inventory.costPrice',
+  sale_price: 'inventory.salePriceAfn',
+  name: 'common.name',
+  phone: 'common.phone',
+  total_credit: 'customers.totalCredit',
+  total_paid: 'customers.totalPaid',
+  remaining_balance: 'customers.remainingKhata',
+};
+
 export default function Reports() {
+  const { t } = useTranslation();
   const { isAdmin } = useAuth();
   const [tab, setTab] = useState('daily');
   const [data, setData] = useState(null);
@@ -33,7 +57,7 @@ export default function Reports() {
       }
       setData(res?.data);
     } catch (err) {
-      toast.error('Failed to load report');
+      toast.error(t('reports.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -49,25 +73,25 @@ export default function Reports() {
       a.href = url;
       a.download = `${type}-report.xlsx`;
       a.click();
-      toast.success('Report downloaded');
+      toast.success(t('reports.downloaded'));
     } catch {
-      toast.error('Export failed');
+      toast.error(t('reports.exportFailed'));
     }
   };
 
   const tabs = [
-    { id: 'daily', label: 'Daily Sales' },
-    { id: 'monthly', label: 'Monthly Sales' },
-    ...(isAdmin ? [{ id: 'profit', label: 'Profit Report' }] : []),
-    { id: 'stock', label: 'Stock Report' },
-    { id: 'customers', label: 'Customer Balances' },
-    { id: 'bestselling', label: 'Best Selling' },
+    { id: 'daily', labelKey: 'reports.dailySales' },
+    { id: 'monthly', labelKey: 'reports.monthlySales' },
+    ...(isAdmin ? [{ id: 'profit', labelKey: 'reports.profitReport' }] : []),
+    { id: 'stock', labelKey: 'reports.stockReport' },
+    { id: 'customers', labelKey: 'reports.customerBalances' },
+    { id: 'bestselling', labelKey: 'reports.bestSelling' },
   ];
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Reports</h1>
+        <h1 className="text-2xl font-bold">{t('reports.title')}</h1>
         <div className="flex gap-2">
           {['stock', 'customers', 'invoices'].map((type) => (
             <button key={type} onClick={() => handleExport(type)} className="btn-secondary text-sm flex items-center gap-1">
@@ -78,15 +102,15 @@ export default function Reports() {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {tabs.map((t) => (
+        {tabs.map((tabItem) => (
           <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
+            key={tabItem.id}
+            onClick={() => setTab(tabItem.id)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              tab === t.id ? 'bg-gold-500 text-primary-900 font-semibold' : 'bg-primary-50 text-primary-800 dark:bg-primary-800 dark:text-gray-200'
+              tab === tabItem.id ? 'bg-gold-500 text-primary-900 font-semibold' : 'bg-primary-50 text-primary-800 dark:bg-primary-800 dark:text-gray-200'
             }`}
           >
-            {t.label}
+            {t(tabItem.labelKey)}
           </button>
         ))}
       </div>
@@ -106,7 +130,7 @@ export default function Reports() {
               <input type="number" className="input-field max-w-xs" value={year} onChange={(e) => setYear(e.target.value)} />
             </>
           )}
-          <button onClick={load} className="btn-primary">Load</button>
+          <button onClick={load} className="btn-primary">{t('common.load')}</button>
         </div>
       )}
 
@@ -114,36 +138,36 @@ export default function Reports() {
         <div className="card">
           {tab === 'daily' && data && (
             <>
-              <p className="mb-4">Date: {formatDate(data.date)} | Invoices: {data.summary?.count} | Total: {formatCurrency(data.summary?.total)}</p>
-              <ReportTable rows={data.invoices} cols={['invoice_number', 'customer_name', 'grand_total', 'paid_amount', 'remaining_amount']} />
+              <p className="mb-4">{t('reports.dailySummary', { date: formatDate(data.date), invoices: data.summary?.count, total: formatCurrency(data.summary?.total) })}</p>
+              <ReportTable rows={data.invoices} cols={['invoice_number', 'customer_name', 'grand_total', 'paid_amount', 'remaining_amount']} t={t} />
             </>
           )}
           {tab === 'monthly' && data && (
             <>
-              <p className="mb-4">Month: {data.month}/{data.year} | Total: {formatCurrency(data.summary?.total)}</p>
-              <ReportTable rows={data.invoices} cols={['invoice_date', 'invoice_number', 'customer_name', 'grand_total']} />
+              <p className="mb-4">{t('reports.monthlySummary', { month: `${data.month}/${data.year}`, total: formatCurrency(data.summary?.total) })}</p>
+              <ReportTable rows={data.invoices} cols={['invoice_date', 'invoice_number', 'customer_name', 'grand_total']} t={t} />
             </>
           )}
           {tab === 'profit' && data && isAdmin && (
             <>
-              <p className="mb-4">Profit: {formatCurrency(data.summary?.profit)} | Loss: {formatCurrency(data.summary?.loss)}</p>
-              <ReportTable rows={data.data} cols={['invoice_date', 'invoice_number', 'grand_total', 'total_profit', 'total_loss']} />
+              <p className="mb-4">{t('reports.profitSummary', { profit: formatCurrency(data.summary?.profit), loss: formatCurrency(data.summary?.loss) })}</p>
+              <ReportTable rows={data.data} cols={['invoice_date', 'invoice_number', 'grand_total', 'total_profit', 'total_loss']} t={t} />
             </>
           )}
           {tab === 'stock' && data && (
             <>
-              <p className="mb-4">Total Pairs: {data.summary?.total_pairs} | Value: {formatCurrency(data.summary?.total_value)}</p>
-              <ReportTable rows={data.data} cols={['art_number', 'color', 'size', 'quantity', 'cost_price', 'sale_price']} />
+              <p className="mb-4">{t('reports.stockSummary', { pairs: data.summary?.total_pairs, value: formatCurrency(data.summary?.total_value) })}</p>
+              <ReportTable rows={data.data} cols={['art_number', 'color', 'size', 'quantity', 'cost_price', 'sale_price']} t={t} />
             </>
           )}
           {tab === 'customers' && data && (
             <>
-              <p className="mb-4">Total Due: {formatCurrency(data.summary?.total_due)}</p>
-              <ReportTable rows={data.data} cols={['name', 'phone', 'total_credit', 'total_paid', 'remaining_balance']} />
+              <p className="mb-4">{t('reports.customerSummary', { due: formatCurrency(data.summary?.total_due) })}</p>
+              <ReportTable rows={data.data} cols={['name', 'phone', 'total_credit', 'total_paid', 'remaining_balance']} t={t} />
             </>
           )}
           {tab === 'bestselling' && data && (
-            <ReportTable rows={data} cols={['art_number', 'name', 'total_sold', 'total_revenue']} />
+            <ReportTable rows={data} cols={['art_number', 'name', 'total_sold', 'total_revenue']} t={t} />
           )}
         </div>
       )}
@@ -151,13 +175,14 @@ export default function Reports() {
   );
 }
 
-function ReportTable({ rows, cols }) {
-  if (!rows?.length) return <p className="text-gray-500">No data found</p>;
+function ReportTable({ rows, cols, t }) {
+  if (!rows?.length) return <p className="text-gray-500">{t('common.noData')}</p>;
+  const colLabel = (c) => (COL_LABELS[c] ? t(COL_LABELS[c]) : c.replace(/_/g, ' '));
   return (
     <div className="table-container">
       <table className="data-table">
         <thead>
-          <tr>{cols.map((c) => <th key={c}>{c.replace(/_/g, ' ')}</th>)}</tr>
+          <tr>{cols.map((c) => <th key={c}>{colLabel(c)}</th>)}</tr>
         </thead>
         <tbody>
           {rows.map((row, i) => (

@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, Search, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getInventory, getDesigns, getColors, getSizes, createInventory, updateInventory, addStock } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { translateApiMessage } from '../utils/translateApi';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Pagination from '../components/Pagination';
 import { formatCurrency, formatNumber } from '../utils/format';
 
 export default function Inventory() {
+  const { t } = useTranslation();
   const { isAdmin } = useAuth();
   const [items, setItems] = useState([]);
   const [summary, setSummary] = useState({});
@@ -28,7 +31,7 @@ export default function Inventory() {
       setSummary(data.summary);
       setPagination({ page: data.pagination.page, total: data.pagination.total, limit: 50 });
     } catch (err) {
-      toast.error('Failed to load inventory');
+      toast.error(t('inventory.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -47,23 +50,23 @@ export default function Inventory() {
     e.preventDefault();
     try {
       await createInventory(form);
-      toast.success('Stock added');
+      toast.success(t('inventory.stockAdded'));
       setShowModal(false);
       load(pagination.page);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed');
+      toast.error(translateApiMessage(err.response?.data?.message, t) || t('common.failed'));
     }
   };
 
   const handleAddStock = async (id) => {
-    const qty = prompt('Enter quantity to add:');
+    const qty = prompt(t('inventory.enterQtyPrompt'));
     if (!qty) return;
     try {
       await addStock(id, parseInt(qty));
-      toast.success('Stock updated');
+      toast.success(t('inventory.stockUpdated'));
       load(pagination.page);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed');
+      toast.error(translateApiMessage(err.response?.data?.message, t) || t('common.failed'));
     }
   };
 
@@ -71,12 +74,12 @@ export default function Inventory() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Inventory / Stock</h1>
-          <p className="text-gray-500">Total: {formatNumber(summary.total_qty)} pairs</p>
+          <h1 className="text-2xl font-bold">{t('inventory.title')}</h1>
+          <p className="text-gray-500">{t('inventory.totalPairs', { count: formatNumber(summary.total_qty) })}</p>
         </div>
         {isAdmin && (
           <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2">
-            <Plus size={18} /> Add Stock Entry
+            <Plus size={18} /> {t('inventory.addStockEntry')}
           </button>
         )}
       </div>
@@ -86,7 +89,7 @@ export default function Inventory() {
           <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
           <input
             className="input-field pl-10"
-            placeholder="Search design, color, size..."
+            placeholder={t('inventory.searchPlaceholder')}
             value={filters.search}
             onChange={(e) => setFilters({ ...filters, search: e.target.value })}
             onKeyDown={(e) => e.key === 'Enter' && load()}
@@ -98,9 +101,9 @@ export default function Inventory() {
             checked={filters.low_stock}
             onChange={(e) => setFilters({ ...filters, low_stock: e.target.checked })}
           />
-          Low Stock Only
+          {t('inventory.lowStockOnly')}
         </label>
-        <button onClick={() => load()} className="btn-primary">Search</button>
+        <button onClick={() => load()} className="btn-primary">{t('common.search')}</button>
       </div>
 
       {loading ? (
@@ -111,14 +114,14 @@ export default function Inventory() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Design</th>
-                  <th>Color</th>
-                  <th>Size</th>
-                  <th>Qty</th>
-                  {isAdmin && <th>Cost (AFN)</th>}
-                  <th>Sale Price (AFN)</th>
-                  <th>Status</th>
-                  {isAdmin && <th>Actions</th>}
+                  <th>{t('common.design')}</th>
+                  <th>{t('common.color')}</th>
+                  <th>{t('common.size')}</th>
+                  <th>{t('inventory.qty')}</th>
+                  {isAdmin && <th>{t('inventory.costAfn')}</th>}
+                  <th>{t('inventory.salePriceAfn')}</th>
+                  <th>{t('common.status')}</th>
+                  {isAdmin && <th>{t('common.actions')}</th>}
                 </tr>
               </thead>
               <tbody>
@@ -137,15 +140,15 @@ export default function Inventory() {
                     <td>{formatCurrency(item.sale_price)}</td>
                     <td>
                       {item.quantity <= item.low_stock_threshold ? (
-                        <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">Low Stock</span>
+                        <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">{t('inventory.lowStock')}</span>
                       ) : (
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">In Stock</span>
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">{t('inventory.inStock')}</span>
                       )}
                     </td>
                     {isAdmin && (
                       <td>
                         <button onClick={() => handleAddStock(item.id)} className="text-primary-800 dark:text-gold-400 text-sm hover:underline font-medium">
-                          + Add Stock
+                          {t('inventory.addStock')}
                         </button>
                       </td>
                     )}
@@ -161,25 +164,25 @@ export default function Inventory() {
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <form onSubmit={handleSubmit} className="card w-full max-w-md space-y-4">
-            <h3 className="font-semibold text-lg">Add Stock Entry</h3>
+            <h3 className="font-semibold text-lg">{t('inventory.addStockEntry')}</h3>
             <select className="input-field" value={form.design_id} onChange={(e) => setForm({ ...form, design_id: e.target.value })} required>
-              <option value="">Select Design</option>
+              <option value="">{t('inventory.selectDesign')}</option>
               {designs.map((d) => <option key={d.id} value={d.id}>{d.art_number}</option>)}
             </select>
             <select className="input-field" value={form.color_id} onChange={(e) => setForm({ ...form, color_id: e.target.value })} required>
-              <option value="">Select Color</option>
+              <option value="">{t('inventory.selectColor')}</option>
               {colors.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             <select className="input-field" value={form.size_id} onChange={(e) => setForm({ ...form, size_id: e.target.value })} required>
-              <option value="">Select Size</option>
+              <option value="">{t('inventory.selectSize')}</option>
               {sizes.map((s) => <option key={s.id} value={s.id}>{s.size_value}</option>)}
             </select>
-            <input type="number" className="input-field" placeholder="Quantity" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} required />
-            <input type="number" className="input-field" placeholder="Cost Price (AFN)" value={form.cost_price} onChange={(e) => setForm({ ...form, cost_price: e.target.value })} required />
-            <input type="number" className="input-field" placeholder="Sale Price (AFN)" value={form.sale_price} onChange={(e) => setForm({ ...form, sale_price: e.target.value })} required />
+            <input type="number" className="input-field" placeholder={t('common.quantity')} value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} required />
+            <input type="number" className="input-field" placeholder={t('inventory.costPrice')} value={form.cost_price} onChange={(e) => setForm({ ...form, cost_price: e.target.value })} required />
+            <input type="number" className="input-field" placeholder={t('inventory.salePriceAfn')} value={form.sale_price} onChange={(e) => setForm({ ...form, sale_price: e.target.value })} required />
             <div className="flex gap-2">
-              <button type="submit" className="btn-primary flex-1">Save</button>
-              <button type="button" onClick={() => setShowModal(false)} className="btn-secondary flex-1">Cancel</button>
+              <button type="submit" className="btn-primary flex-1">{t('common.save')}</button>
+              <button type="button" onClick={() => setShowModal(false)} className="btn-secondary flex-1">{t('common.cancel')}</button>
             </div>
           </form>
         </div>

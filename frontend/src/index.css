@@ -47,6 +47,26 @@
   }
 }
 
+/* RTL (Pashto) */
+[dir="rtl"] .data-table {
+  @apply text-right;
+}
+[dir="rtl"] .data-table th,
+[dir="rtl"] .data-table td {
+  @apply text-right;
+}
+[dir="rtl"] .sidebar-link {
+  @apply flex-row-reverse;
+}
+[dir="rtl"] input,
+[dir="rtl"] textarea,
+[dir="rtl"] select {
+  text-align: right;
+}
+[dir="rtl"] .input-field::placeholder {
+  text-align: right;
+}
+
 @media print {
   .no-print {
     display: none !important;

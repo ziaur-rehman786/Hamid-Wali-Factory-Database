@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Plus, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getCustomers, createCustomer } from '../services/api';
+import { translateApiMessage } from '../utils/translateApi';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Pagination from '../components/Pagination';
 import { formatCurrency } from '../utils/format';
 
 export default function Customers() {
+  const { t } = useTranslation();
   const [customers, setCustomers] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, total: 0, limit: 20 });
   const [loading, setLoading] = useState(true);
@@ -32,12 +35,12 @@ export default function Customers() {
     e.preventDefault();
     try {
       await createCustomer(form);
-      toast.success('Customer added');
+      toast.success(t('customers.added'));
       setShowModal(false);
       setForm({ name: '', phone: '', address: '' });
       load();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed');
+      toast.error(translateApiMessage(err.response?.data?.message, t) || t('common.failed'));
     }
   };
 
@@ -45,16 +48,16 @@ export default function Customers() {
     <div className="space-y-6">
       <div className="flex justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Customers / Khata</h1>
-          <p className="text-gray-500">Manage customer accounts and credit</p>
+          <h1 className="text-2xl font-bold">{t('customers.title')}</h1>
+          <p className="text-gray-500">{t('customers.subtitle')}</p>
         </div>
         <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2">
-          <Plus size={18} /> Add Customer
+          <Plus size={18} /> {t('customers.addCustomer')}
         </button>
       </div>
 
       <div className="flex gap-3">
-        <input className="input-field max-w-sm" placeholder="Search customer..." value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && load()} />
+        <input className="input-field max-w-sm" placeholder={t('customers.searchPlaceholder')} value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && load()} />
         <button onClick={() => load()} className="btn-primary"><Search size={16} /></button>
       </div>
 
@@ -64,12 +67,12 @@ export default function Customers() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Phone</th>
-                  <th>Total Credit</th>
-                  <th>Total Paid</th>
-                  <th>Remaining (Khata)</th>
-                  <th>Actions</th>
+                  <th>{t('common.name')}</th>
+                  <th>{t('common.phone')}</th>
+                  <th>{t('customers.totalCredit')}</th>
+                  <th>{t('customers.totalPaid')}</th>
+                  <th>{t('customers.remainingKhata')}</th>
+                  <th>{t('common.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -83,7 +86,7 @@ export default function Customers() {
                       {formatCurrency(c.remaining_balance)}
                     </td>
                     <td>
-                      <Link to={`/customers/${c.id}`} className="text-primary-800 dark:text-gold-400 hover:underline text-sm font-medium">View Khata</Link>
+                      <Link to={`/customers/${c.id}`} className="text-primary-800 dark:text-gold-400 hover:underline text-sm font-medium">{t('customers.viewKhata')}</Link>
                     </td>
                   </tr>
                 ))}
@@ -97,13 +100,13 @@ export default function Customers() {
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <form onSubmit={handleSubmit} className="card w-full max-w-md space-y-4">
-            <h3 className="font-semibold">Add Customer</h3>
-            <input className="input-field" placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-            <input className="input-field" placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-            <input className="input-field" placeholder="Address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+            <h3 className="font-semibold">{t('customers.addCustomer')}</h3>
+            <input className="input-field" placeholder={t('common.name')} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+            <input className="input-field" placeholder={t('common.phone')} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+            <input className="input-field" placeholder={t('common.address')} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
             <div className="flex gap-2">
-              <button type="submit" className="btn-primary flex-1">Save</button>
-              <button type="button" onClick={() => setShowModal(false)} className="btn-secondary flex-1">Cancel</button>
+              <button type="submit" className="btn-primary flex-1">{t('common.save')}</button>
+              <button type="button" onClick={() => setShowModal(false)} className="btn-secondary flex-1">{t('common.cancel')}</button>
             </div>
           </form>
         </div>

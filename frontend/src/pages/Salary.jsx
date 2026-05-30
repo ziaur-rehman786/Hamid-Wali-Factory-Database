@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Plus, Pencil, Trash2, Search, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getSalaries, createSalary, updateSalary, deleteSalary } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { translateApiMessage } from '../utils/translateApi';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Pagination from '../components/Pagination';
 import { formatCurrency, formatDate } from '../utils/format';
@@ -35,7 +37,7 @@ function toForm(emp) {
   };
 }
 
-function statusBadge(status) {
+function statusBadge(status, t) {
   if (!status) return <span className="text-xs text-gray-400">—</span>;
   return (
     <span
@@ -45,12 +47,13 @@ function statusBadge(status) {
           : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300'
       }`}
     >
-      {status === 'paid' ? 'Paid' : 'Not Paid'}
+      {status === 'paid' ? t('common.paid') : t('salary.notPaid')}
     </span>
   );
 }
 
 export default function Salary() {
+  const { t } = useTranslation();
   const { isAdmin } = useAuth();
   const [employees, setEmployees] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, total: 0, limit: 50 });
@@ -88,7 +91,7 @@ export default function Salary() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name.trim()) {
-      toast.error('Name is required');
+      toast.error(t('salary.nameRequiredToast'));
       return;
     }
     const payload = {
@@ -100,26 +103,26 @@ export default function Salary() {
     try {
       if (editing) {
         await updateSalary(editing.id, payload);
-        toast.success('Employee updated');
+        toast.success(t('salary.employeeUpdated'));
       } else {
         await createSalary(payload);
-        toast.success('Employee added');
+        toast.success(t('salary.employeeAdded'));
       }
       setShowModal(false);
       load(pagination.page);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to save');
+      toast.error(translateApiMessage(err.response?.data?.message, t) || t('salary.saveFailed'));
     }
   };
 
   const handleDelete = async (emp) => {
-    if (!confirm(`Remove employee "${emp.name}" from salary records?`)) return;
+    if (!confirm(t('salary.removeConfirm', { name: emp.name }))) return;
     try {
       await deleteSalary(emp.id);
-      toast.success('Employee removed');
+      toast.success(t('salary.employeeRemoved'));
       load(pagination.page);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to delete');
+      toast.error(translateApiMessage(err.response?.data?.message, t) || t('salary.deleteFailed'));
     }
   };
 
@@ -127,20 +130,20 @@ export default function Salary() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Employee Salary</h1>
+          <h1 className="text-2xl font-bold">{t('salary.title')}</h1>
           <p className="text-gray-500">
-            Employee profiles and default monthly salary. Open an employee to add or update each month.
+            {t('salary.subtitle')}
           </p>
         </div>
         <button onClick={openAdd} className="btn-primary flex items-center gap-2 shrink-0">
-          <Plus size={18} /> Add Employee
+          <Plus size={18} /> {t('salary.addEmployee')}
         </button>
       </div>
 
       <div className="flex gap-3">
         <input
           className="input-field max-w-sm"
-          placeholder="Search by name, ID, or Tazkira..."
+          placeholder={t('salary.searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && load()}
@@ -158,22 +161,22 @@ export default function Salary() {
             <table className="data-table min-w-[900px]">
               <thead>
                 <tr>
-                  <th>ID #</th>
-                  <th>Name</th>
-                  <th>Default Monthly Salary</th>
-                  <th>Start Date</th>
-                  <th>Months Recorded</th>
-                  <th>Advance to recover</th>
-                  <th>Still owed</th>
-                  <th>Latest Status</th>
-                  <th>Actions</th>
+                  <th>{t('salary.idNum')}</th>
+                  <th>{t('common.name')}</th>
+                  <th>{t('salary.defaultSalary')}</th>
+                  <th>{t('salary.startDate')}</th>
+                  <th>{t('salary.monthsRecorded')}</th>
+                  <th>{t('salary.advanceRecover')}</th>
+                  <th>{t('salary.stillOwed')}</th>
+                  <th>{t('salary.latestStatus')}</th>
+                  <th>{t('common.actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {employees.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="text-center text-gray-500 py-8">
-                      No employees yet. Click &quot;Add Employee&quot; to get started.
+                      {t('salary.noEmployees')}
                     </td>
                   </tr>
                 ) : (
@@ -190,20 +193,20 @@ export default function Salary() {
                       <td className={emp.owed_balance > 0 ? 'text-blue-600 font-semibold' : 'text-gray-500'}>
                         {formatCurrency(emp.owed_balance || 0)}
                       </td>
-                      <td>{statusBadge(emp.latest_status)}</td>
+                      <td>{statusBadge(emp.latest_status, t)}</td>
                       <td>
                         <div className="flex items-center gap-2 flex-wrap">
                           <Link
                             to={`/salary/${emp.id}`}
                             className="text-primary-800 dark:text-gold-400 hover:underline text-sm font-medium flex items-center gap-1"
                           >
-                            <Calendar size={14} /> Monthly Salary
+                            <Calendar size={14} /> {t('salary.monthlySalary')}
                           </Link>
                           <button
                             type="button"
                             onClick={() => openEdit(emp)}
                             className="text-primary-800 dark:text-gold-400 hover:opacity-80 p-1"
-                            title="Edit profile"
+                            title={t('salary.editProfile')}
                           >
                             <Pencil size={16} />
                           </button>
@@ -212,7 +215,7 @@ export default function Salary() {
                               type="button"
                               onClick={() => handleDelete(emp)}
                               className="text-red-600 hover:text-red-700 p-1"
-                              title="Remove"
+                              title={t('common.remove')}
                             >
                               <Trash2 size={16} />
                             </button>
@@ -233,24 +236,24 @@ export default function Salary() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
           <form onSubmit={handleSubmit} className="card w-full max-w-2xl space-y-4 my-4">
             <h3 className="font-semibold text-lg">
-              {editing ? 'Edit Employee Profile' : 'Add Employee'}
+              {editing ? t('salary.editEmployee') : t('salary.addEmployee')}
             </h3>
             <p className="text-sm text-gray-500">
-              Default monthly salary is used when you add a new month. Payment status is set per month on the Monthly Salary page.
+              {t('salary.profileHint')}
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">ID #</label>
+                <label className="block text-sm font-medium mb-1">{t('salary.idNum')}</label>
                 <input
                   className="input-field"
-                  placeholder="e.g. EMP-003"
+                  placeholder={t('salary.empIdPlaceholder')}
                   value={form.employee_number}
                   onChange={(e) => setForm({ ...form, employee_number: e.target.value })}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Name *</label>
+                <label className="block text-sm font-medium mb-1">{t('salary.nameRequired')}</label>
                 <input
                   className="input-field"
                   value={form.name}
@@ -259,7 +262,7 @@ export default function Salary() {
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium mb-1">Address</label>
+                <label className="block text-sm font-medium mb-1">{t('common.address')}</label>
                 <input
                   className="input-field"
                   value={form.address}
@@ -267,7 +270,7 @@ export default function Salary() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Father Name</label>
+                <label className="block text-sm font-medium mb-1">{t('salary.fatherName')}</label>
                 <input
                   className="input-field"
                   value={form.father_name}
@@ -275,7 +278,7 @@ export default function Salary() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Tazkira No</label>
+                <label className="block text-sm font-medium mb-1">{t('salary.tazkira')}</label>
                 <input
                   className="input-field"
                   value={form.tazkira_no}
@@ -283,7 +286,7 @@ export default function Salary() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Residence</label>
+                <label className="block text-sm font-medium mb-1">{t('salary.residence')}</label>
                 <input
                   className="input-field"
                   value={form.residence}
@@ -291,7 +294,7 @@ export default function Salary() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Default Monthly Salary (AFN)</label>
+                <label className="block text-sm font-medium mb-1">{t('salary.defaultSalaryAfn')}</label>
                 <input
                   type="number"
                   min="0"
@@ -302,7 +305,7 @@ export default function Salary() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Start Date</label>
+                <label className="block text-sm font-medium mb-1">{t('salary.startDate')}</label>
                 <input
                   type="date"
                   className="input-field"
@@ -311,7 +314,7 @@ export default function Salary() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Ending Date</label>
+                <label className="block text-sm font-medium mb-1">{t('salary.endingDate')}</label>
                 <input
                   type="date"
                   className="input-field"
@@ -323,14 +326,14 @@ export default function Salary() {
 
             <div className="flex gap-2 pt-2">
               <button type="submit" className="btn-primary flex-1">
-                {editing ? 'Save Changes' : 'Add Employee'}
+                {editing ? t('salary.saveChanges') : t('salary.addEmployee')}
               </button>
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
                 className="btn-secondary flex-1"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
           </form>

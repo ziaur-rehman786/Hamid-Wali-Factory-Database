@@ -1,6 +1,7 @@
 import { query, getClient } from '../config/database.js';
 import { generateInvoiceNumber, stripProfitFields } from '../utils/helpers.js';
 import { syncCustomerKhata } from '../utils/syncCustomerKhata.js';
+import { msg } from '../i18n/messages.js';
 
 export const getInvoices = async (req, res) => {
   try {
@@ -58,7 +59,7 @@ export const getInvoice = async (req, res) => {
        WHERE inv.id = $1`,
       [req.params.id]
     );
-    if (!inv.rows.length) return res.status(404).json({ message: 'Invoice not found' });
+    if (!inv.rows.length) return res.status(404).json({ message: msg(req, 'invoiceNotFound') });
 
     const items = await query(
       `SELECT ii.*, pd.art_number, c.name as color_name, s.size_value
@@ -87,7 +88,7 @@ export const createInvoice = async (req, res) => {
     const { customer_id, items, paid_amount = 0, invoice_date, notes } = req.body;
 
     if (!customer_id || !items?.length) {
-      return res.status(400).json({ message: 'Customer and items are required' });
+      return res.status(400).json({ message: msg(req, 'customerItemsRequired') });
     }
 
     await client.query('BEGIN');
@@ -221,7 +222,7 @@ export const createInvoice = async (req, res) => {
     );
 
     await client.query('COMMIT');
-    res.status(201).json({ ...invoice, message: 'Invoice created successfully' });
+    res.status(201).json({ ...invoice, message: msg(req, 'invoiceCreated') });
   } catch (err) {
     await client.query('ROLLBACK');
     res.status(400).json({ message: err.message });
@@ -232,7 +233,7 @@ export const createInvoice = async (req, res) => {
 
 export const deleteInvoice = async (req, res) => {
   if (req.user.role !== 'admin') {
-    return res.status(403).json({ message: 'Only admin can delete invoices' });
+    return res.status(403).json({ message: msg(req, 'adminOnlyDelete') });
   }
 
   const client = await getClient();
@@ -242,7 +243,7 @@ export const deleteInvoice = async (req, res) => {
     const inv = await client.query('SELECT * FROM invoices WHERE id = $1', [req.params.id]);
     if (!inv.rows.length) {
       await client.query('ROLLBACK');
-      return res.status(404).json({ message: 'Invoice not found' });
+      return res.status(404).json({ message: msg(req, 'invoiceNotFound') });
     }
     const invoice = inv.rows[0];
 
@@ -275,7 +276,7 @@ export const deleteInvoice = async (req, res) => {
 
     await client.query('COMMIT');
     await syncCustomerKhata(customerId);
-    res.json({ message: 'Invoice deleted and stock restored' });
+    res.json({ message: msg(req, 'invoiceDeleted') });
   } catch (err) {
     await client.query('ROLLBACK');
     res.status(500).json({ message: err.message });

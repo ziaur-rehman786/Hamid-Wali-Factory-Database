@@ -5,6 +5,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import dotenv from 'dotenv';
 import { pgExecutable, findPgBin, pgToolsAvailable } from '../utils/pgBin.js';
+import { msg } from '../i18n/messages.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, '../../.env') });
@@ -46,7 +47,7 @@ export const createBackup = async (req, res) => {
 
     await execAsync(cmd, { env: pgEnv() });
 
-    res.json({ message: 'Backup created', filename, path: filepath });
+    res.json({ message: msg(req, 'backupCreated'), filename, path: filepath });
   } catch (err) {
     res.status(500).json({
       message: 'Backup failed',
@@ -75,14 +76,14 @@ export const listBackups = async (req, res) => {
 export const restoreBackup = async (req, res) => {
   try {
     if (!pgToolsAvailable()) {
-      return res.status(500).json({ message: 'psql not found. Set PG_BIN in backend/.env' });
+      return res.status(500).json({ message: msg(req, 'psqlNotFound') });
     }
 
     const { filename } = req.body;
     const filepath = path.join(backupDir, filename);
 
     if (!fs.existsSync(filepath)) {
-      return res.status(404).json({ message: 'Backup file not found' });
+      return res.status(404).json({ message: msg(req, 'backupNotFound') });
     }
 
     const psql = pgExecutable('psql');
@@ -90,7 +91,7 @@ export const restoreBackup = async (req, res) => {
 
     await execAsync(cmd, { env: pgEnv() });
 
-    res.json({ message: 'Database restored successfully' });
+    res.json({ message: msg(req, 'restoreSuccess') });
   } catch (err) {
     res.status(500).json({
       message: 'Restore failed',
@@ -102,7 +103,7 @@ export const restoreBackup = async (req, res) => {
 export const downloadBackup = async (req, res) => {
   try {
     const filepath = path.join(backupDir, req.params.filename);
-    if (!fs.existsSync(filepath)) return res.status(404).json({ message: 'Not found' });
+    if (!fs.existsSync(filepath)) return res.status(404).json({ message: msg(req, 'notFound') });
     res.download(filepath);
   } catch (err) {
     res.status(500).json({ message: err.message });

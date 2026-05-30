@@ -8,6 +8,8 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
+  const lang = localStorage.getItem('hw_factory_lang');
+  if (lang) config.headers['Accept-Language'] = lang;
   return config;
 });
 
