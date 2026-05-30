@@ -183,6 +183,7 @@
     "thankYou": "Thank you for your business!",
     "pdfFailed": "PDF download failed",
     "printFailed": "Print failed",
+    "printTip": "In the print dialog, turn off \"Headers and footers\" to hide the URL and date.",
     "deleteConfirm": "Delete invoice and restore stock?",
     "deleted": "Invoice deleted"
   },

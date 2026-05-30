@@ -98,3 +98,39 @@ export const printInvoice = async (invoice) => {
   doc.autoPrint();
   window.open(doc.output('bloburl'), '_blank');
 };
+
+/** PDF from on-screen bill so Pashto renders correctly */
+export const downloadInvoicePDFFromElement = async (elementId, filename) => {
+  const el = document.getElementById(elementId);
+  if (!el) throw new Error('Invoice element not found');
+
+  const html2canvas = (await import('html2canvas')).default;
+  const canvas = await html2canvas(el, {
+    scale: 2,
+    useCORS: true,
+    logging: false,
+    backgroundColor: '#ffffff',
+  });
+
+  const imgData = canvas.toDataURL('image/png');
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const margin = 10;
+  const contentWidth = pageWidth - margin * 2;
+  let imgHeight = (canvas.height * contentWidth) / canvas.width;
+  let heightLeft = imgHeight;
+  let position = margin;
+
+  pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
+  heightLeft -= pageHeight - margin * 2;
+
+  while (heightLeft > 0) {
+    position = heightLeft - imgHeight + margin;
+    pdf.addPage();
+    pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
+    heightLeft -= pageHeight - margin * 2;
+  }
+
+  pdf.save(`${filename}.pdf`);
+};

@@ -3,6 +3,11 @@
 @tailwind utilities;
 
 @layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
   body {
     @apply bg-factory-cream text-gray-900 dark:bg-primary-950 dark:text-gray-100;
   }
@@ -73,5 +78,22 @@
   }
   .print-only {
     display: block !important;
+  }
+  body * {
+    visibility: hidden;
+  }
+  #invoice-print,
+  #invoice-print * {
+    visibility: visible;
+  }
+  #invoice-print {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    box-shadow: none;
+    border: none;
   }
 }

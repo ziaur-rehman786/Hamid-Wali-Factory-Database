@@ -183,6 +183,7 @@
     "thankYou": "ستاسو د سوداګرۍ مننه!",
     "pdfFailed": "PDF ډاونلوډ ناکام شو",
     "printFailed": "چاپ ناکام شو",
+    "printTip": "په چاپ ډیالوګ کې \"Headers and footers\" بند کړئ ترڅو URL او نېټه ښکاره نشي.",
     "deleteConfirm": "بل ړنګ کړئ او ذخیره بیرته راګرځول شي؟",
     "deleted": "بل ړنګ شو"
   },

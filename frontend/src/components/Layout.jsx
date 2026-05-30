@@ -43,12 +43,12 @@ export default function Layout() {
   const roleLabel = user?.role === 'admin' ? t('roles.admin') : t('roles.staff');
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex h-screen flex-col overflow-hidden">
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/50 z-40 lg:hidden top-[5.5rem]" onClick={() => setSidebarOpen(false)} />
       )}
 
-      <header className="sticky top-0 z-50 shrink-0 flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3.5 min-h-[5.5rem] bg-primary-950 border-b border-gold-500/25 shadow-sm">
+      <header className="z-50 shrink-0 flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3.5 min-h-[5.5rem] bg-primary-950 border-b border-gold-500/25 shadow-sm">
         <button
           className="lg:hidden p-1.5 -ml-1 text-gold-300 hover:text-gold-200 shrink-0"
           onClick={() => setSidebarOpen(true)}
@@ -70,9 +70,9 @@ export default function Layout() {
         </button>
       </header>
 
-      <div className="flex flex-1 min-h-0">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
         <aside
-          className={`fixed lg:static top-[5.5rem] lg:top-auto bottom-0 start-0 z-50 w-72 bg-primary-900 border-e border-gold-600/20 flex flex-col transform transition-transform lg:translate-x-0 ${
+          className={`fixed lg:static top-[5.5rem] lg:top-auto bottom-0 start-0 z-50 flex h-full w-72 flex-col bg-primary-900 border-e border-gold-600/20 transform transition-transform lg:translate-x-0 ${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full rtl:lg:translate-x-0'
           }`}
         >
@@ -106,7 +106,7 @@ export default function Layout() {
           </div>
         </aside>
 
-        <main className="flex-1 p-4 md:p-6 overflow-auto min-w-0 bg-factory-cream dark:bg-primary-950">
+        <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 min-w-0 bg-factory-cream dark:bg-primary-950 overscroll-contain">
           <Outlet />
         </main>
       </div>

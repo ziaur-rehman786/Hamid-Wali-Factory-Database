@@ -8,8 +8,10 @@ import { useAuth } from '../context/AuthContext';
 import { translateApiMessage } from '../utils/translateApi';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { formatCurrency, formatDate } from '../utils/format';
-import { downloadInvoicePDF, printInvoice } from '../utils/invoicePdf';
+import { downloadInvoicePDFFromElement } from '../utils/invoicePdf';
+import { printInvoiceFromElement } from '../utils/invoicePrint';
 import FactoryLogo, { getLogoUrl } from '../components/FactoryLogo';
+import { FACTORY_NAME_EN, FACTORY_NAME_PASHTO } from '../theme/brand';
 
 export default function InvoiceView() {
   const { t } = useTranslation();
@@ -50,7 +52,7 @@ export default function InvoiceView() {
           <button
             onClick={async () => {
               try {
-                await downloadInvoicePDF(invoice);
+                await downloadInvoicePDFFromElement('invoice-print', invoice.invoice_number);
               } catch {
                 toast.error(t('invoiceView.pdfFailed'));
               }
@@ -60,9 +62,10 @@ export default function InvoiceView() {
             <Download size={18} /> {t('invoiceView.pdf')}
           </button>
           <button
-            onClick={async () => {
+            onClick={() => {
               try {
-                await printInvoice(invoice);
+                const opened = printInvoiceFromElement('invoice-print', invoice.invoice_number);
+                if (opened) toast(t('invoiceView.printTip'), { duration: 5000, icon: 'ℹ️' });
               } catch {
                 toast.error(t('invoiceView.printFailed'));
               }
@@ -80,10 +83,19 @@ export default function InvoiceView() {
       </div>
 
       <div id="invoice-print" className="card max-w-3xl mx-auto">
-        <div className="text-center border-b-2 border-gold-500 pb-4 mb-6">
+        <div className="text-center border-b-2 border-gold-500 pb-4 mb-6 invoice-header">
           <FactoryLogo src={getLogoUrl(factory)} size="invoice" className="w-24 h-24 mx-auto mb-3" />
-          <h2 className="text-2xl font-bold text-primary-900">{factory.factory_name || t('app.factoryName')}</h2>
-          <p className="text-sm text-gray-500">{factory.factory_address}</p>
+          <h2 className="text-2xl font-bold text-primary-900 dark:text-white tracking-tight">
+            {factory.factory_name || FACTORY_NAME_EN}
+          </h2>
+          <p
+            className="text-xl sm:text-2xl font-bold text-primary-800 dark:text-gold-400 mt-2 leading-snug"
+            dir="rtl"
+            lang="ps"
+          >
+            {FACTORY_NAME_PASHTO}
+          </p>
+          <p className="text-sm text-gray-500 mt-3">{factory.factory_address}</p>
           <p className="text-sm text-gray-500">{t('invoiceView.phone')} {factory.factory_phone}</p>
           {factory.factory_email && (
             <p className="text-sm text-gray-500">{t('common.email')}: {factory.factory_email}</p>
