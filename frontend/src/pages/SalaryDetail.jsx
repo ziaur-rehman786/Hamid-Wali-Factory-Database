@@ -221,7 +221,7 @@ export default function SalaryDetail() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
           <Link to="/salary" className="text-sm text-primary-800 dark:text-gold-400 hover:underline flex items-center gap-1 mb-2">
             <ArrowLeft size={16} /> Back to employees
@@ -231,7 +231,7 @@ export default function SalaryDetail() {
             {employee.employee_number || `ID #${employee.id}`} · Default salary {formatCurrency(employee.salary_amount)}/month
           </p>
         </div>
-        <button onClick={openAddMonth} className="btn-primary flex items-center gap-2 shrink-0">
+        <button onClick={openAddMonth} className="btn-primary flex items-center gap-2 shrink-0 w-fit">
           <Plus size={18} /> Add Month
         </button>
       </div>
